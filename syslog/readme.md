@@ -1,6 +1,6 @@
 # Cách sử dụng 
 
-![alt](https://github.com/luudinhmac/Tools-Network/tree/master/syslog/image.png)
+![alt](https://github.com/luudinhmac/Tools-Network/blob/master/syslog/image.png)
 
 `Mặc định syslog dùng port 514`
 `Có thể thay đổi port trong router`
