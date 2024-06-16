@@ -1,0 +1,156 @@
+CONFIG vlan-access:
+vlan 200
+name IT
+
+int e0/0
+switchport mode access
+switchport access vlan 200
+exit
+END_vlan-access
+
+CONFIG trunking:
+int e0/0
+switchport trunk encapsulation dot1q
+switchport mode trunk
+END_trunking
+
+
+
+CONFIG nat:
+interface e0/0
+ip nat outside
+exit
+interface e0/1
+ip nat inside
+exit
+ip nat inside source list 1 interface e0/0 overload
+access-list 1 permit 192.168.1.0 0.0.0.255
+exit
+END_nat
+
+
+CONFIG static nat:
+int e0/0
+ip nat inside ##cong LAN
+exit
+int e0/1
+ip nat outside ##cong WAN
+exit
+ip nat inside source static 192.168.1.100 200.200.200.200
+END_nat
+
+
+CONFIG ospf:
+router ospf 1
+network 192.168.1.0 0.0.0.255 area 0
+network 10.10.10.0 0.0.0.255 area 0
+exit
+END_ospf
+
+CONFIG rip:
+router rip
+version 2
+network 192.168.1.0
+network 10.0.0.0
+exit
+END_rip
+
+CONFIG ripng:
+ipv6 unicast-routing
+router rip
+version 2
+no auto-summary
+ipv6 router rip CCNA
+exit
+END_ripng
+
+CONFIG bgp:
+router bgp 65001
+neighbor 192.168.1.2 remote-as 65002
+network 10.0.0.0 mask 255.0.0.0
+exit
+END_bgp
+
+CONFIG eigrp:
+router eigrp 100
+network 192.168.1.0 0.0.0.255
+network 10.0.0.0
+exit
+END_eigrp
+
+CONFIG static route:
+ip route 192.168.2.0 255.255.255.0 10.0.0.1
+exit
+END_static-route
+
+
+
+CONFIG dhcp:
+ip dhcp pool LAN_POOL
+network 192.168.1.0 255.255.255.0
+default-router 192.168.1.1
+dns-server 8.8.8.8
+exit
+END_dhcp
+
+CONFIG vrrp:
+interface e0/0
+ip address 192.168.1.1 255.255.255.0
+vrrp 1 ip 192.168.1.10
+vrrp 1 priority 110
+exit
+interface e0/1
+ip address 192.168.2.1 255.255.255.0
+vrrp 2 ip 192.168.2.10
+vrrp 2 priority 110
+exit
+END_vrrp
+
+CONFIG static-routing:
+ip route 192.168.2.0 255.255.255.0 192.168.1.1
+ip route 10.10.10.0 255.255.255.0 192.168.1.1
+END_static-routing
+
+
+CONFIG acl:
+# Standard- acl
+
+access-list 1 permit 192.168.1.0 0.0.0.255
+access-list 1 deny any
+interface e0/0
+ip access-group 1 in
+exit
+
+# Extended-acl
+access-list 101 permit tcp any host 192.168.1.100 eq 80
+access-list 101 permit tcp any host 192.168.1.100 eq 443
+access-list 101 deny ip any any
+interface e0/0
+ip access-group 101 in
+exit
+END_extended-acl
+
+CONFIG dhcp-relay:
+interface e0/0
+ip helper-address 192.168.1.2
+exit
+END_dhcp-relay
+
+CONFIG redistribute
+# redistribute-ospf-to-rip:
+router rip
+redistribute ospf 1 metric 3
+exit
+
+
+# redistribute-eigrp-to-ospf:
+router ospf 1
+redistribute eigrp 100 subnets
+exit
+
+
+# redistribute-bgp-to-ospf:
+router ospf 1
+redistribute bgp 65001 subnets
+exit
+END_redistribute
