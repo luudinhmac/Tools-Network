@@ -41,7 +41,7 @@ def get_config():
             continue
 
 def open_webpage(event):
-    webbrowser.open_new(r"https://github.com/luudinhmac")
+    webbrowser.open_new(r"https://github.com/luudinhmac/Tools-Network/tree/master/Get_running_configure")
 
 # Create the tkinter window
 root = tk.Tk()
