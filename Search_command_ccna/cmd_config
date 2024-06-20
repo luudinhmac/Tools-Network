@@ -154,3 +154,83 @@ router ospf 1
 redistribute bgp 65001 subnets
 exit
 END_redistribute
+
+
+# HSRP
+
+
+CONFIG HSRP hsrp
+#Router-A:
+
+interface FastEthernet0/0
+
+ ip address 10.0.254.20 255.255.255.0
+
+ standby 1 ip 10.0.254.10
+
+ standby 1 priority 105
+
+ standby 1 preempt
+
+ standby 1 track FastEthernet0/1
+
+#Router-B:
+
+interface FastEthernet0/0
+
+ ip address 10.0.254.30 255.255.255.0
+
+ standby 1 ip 10.0.254.10
+
+ standby 1 priority 100
+
+ standby 1 preempt
+
+ standby 1 track FastEthernet0/1
+
+# Show 
+ show standby brief
+END_HSRP
+
+CONFIG VPN
+#VPN site to site
+## Config default route
+HQ(config)# ip route 0.0.0.0 0.0.0.0 113.114.115.2  
+Branch(config)# ip route 0.0.0.0 0.0.0.0 115.114.113.2
+
+HQ(config)# crypto isakmp policy 9
+HQ(config-isakmp)# hash md5
+HQ(config-isakmp)# authentication pre-share
+###Step 2:  Create shared key to use VPN connection
+HQ(config)# crypto isakmp key VPNKEY address 115.114.113.1     # (ip router branch)
+
+
+##Step3: Quy định lifetime 
+
+HQ(config)# crypto ipsec security-association lifetime seconds 86400
+
+#Step4: Config ACL IP list can access VPN.
+
+HQ(config)# access-list 100 permit ip 192.168.1.0 0.0.0.255 192.168.2.0 0.0.0.255
+
+#Step 5:  Define the transformations set that will be used for this VPN connection
+
+HQ(config)# crypto ipsec transform-set SETNAME esp-3des esp-md5-hmac
+
+
+##Step6:  Create cypto-map for transforms, setnames
+
+HQ(config)# crypto map MAPNAME 10 ipsec-isakmp
+
+HQ(config-crypto-map)# set peer 115.114.113.1   (ip router branch)
+
+HQ(config-crypto-map)# set transform-set SETNAME  ( setname step 5)
+
+HQ(config-crypto-map)# match address 100  (100 : acl-number step 4 )
+
+#Step7: attach into interface
+
+HQ(config)#inter s0/0/0
+HQ(config-if)#crypto map MAPNAME
+
+END_VPN
